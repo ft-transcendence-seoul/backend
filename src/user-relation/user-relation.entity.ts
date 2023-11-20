@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from '../users/user.entity';
+import { User } from 'src/users/user.entity';
 import { UserRelationStatusEnum } from 'src/user-relation/enums/user-relation-status.enum';
 
 @Entity()

@@ -24,15 +24,21 @@ export class RedisService {
     return this.redisClient;
   }
 
-  hset(key: string, field: string, value: number) {
-    return this.redisClient.hset(key, field, value);
+  hset(key: string | number, field: string, value: string | number) {
+    const formattedKey = typeof key === 'number' ? key.toString() : key;
+
+    return this.redisClient.hset(formattedKey, field, value);
   }
 
-  async hget(key: string, field: string) {
-    return parseInt(await this.redisClient.hget(key, field)); // pipe
+  hget(key: string | number, field: string) {
+    const formattedKey = typeof key === 'number' ? key.toString() : key;
+
+    return this.redisClient.hget(formattedKey, field);
   }
 
-  hdel(key: string, field: string) {
-    this.redisClient.hdel(key, field);
+  hdel(key: string | number, field: string) {
+    const formattedKey = typeof key === 'number' ? key.toString() : key;
+
+    return this.redisClient.hdel(formattedKey, field);
   }
 }

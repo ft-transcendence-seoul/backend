@@ -15,9 +15,15 @@ export class UserRelationService {
   ) {}
 
   async deleteFriendship(userId: number, otherUserId: number): Promise<void> {
+    if (userId == otherUserId) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
     const userSide = await this.findUserRelation(userId, otherUserId);
     const theOtherSide = await this.findUserRelation(otherUserId, userId);
-    if (userSide?.status === UserRelationStatusEnum.FRIEND && theOtherSide?.status === UserRelationStatusEnum.FRIEND) {
+    if (
+      userSide?.status === UserRelationStatusEnum.FRIEND &&
+      theOtherSide?.status === UserRelationStatusEnum.FRIEND
+    ) {
       await this.userRelationRepository.remove([userSide, theOtherSide]);
     } else {
       throw new BadRequestException('잘못된 요청입니다.');
@@ -25,6 +31,9 @@ export class UserRelationService {
   }
 
   async rejectFriendship(userId: number, otherUserId: number): Promise<void> {
+    if (userId == otherUserId) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
     const userSide = await this.findUserRelation(userId, otherUserId);
     const theOtherSide = await this.findUserRelation(otherUserId, userId);
     if (
@@ -56,7 +65,10 @@ export class UserRelationService {
   async isFriendRelation(userId: number, otherUserId: number): Promise<boolean> {
     const userSide = await this.findUserRelation(userId, otherUserId);
     const theOtherSide = await this.findUserRelation(otherUserId, userId);
-    if (userSide?.status === UserRelationStatusEnum.FRIEND && theOtherSide?.status === UserRelationStatusEnum.FRIEND) {
+    if (
+      userSide?.status === UserRelationStatusEnum.FRIEND &&
+      theOtherSide?.status === UserRelationStatusEnum.FRIEND
+    ) {
       return true;
     }
     return false;
@@ -73,6 +85,9 @@ export class UserRelationService {
 
   // user-otherUser(status=friend_request)객체 1개, otherUser-user(status=pending_approval) 객체 1개, 총 2개의 객체 생성
   async createFriendRequest(requester: User, recipient: User): Promise<void> {
+    if (requester.id == recipient.id) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
     // 내가 상대방과 아무 사이아닐 때 가능함. 상대방이 나를 차단했어도 요청은 할 수 있음(상대입장은 여전히 차단함)
     const requesterSide = await this.findUserRelation(requester.id, recipient.id);
     const recipientSide = await this.findUserRelation(recipient.id, requester.id);
@@ -98,6 +113,9 @@ export class UserRelationService {
 
   // user가 otherUser 차단(친구관계여도 무조건 차단함)
   async createBlockRelation(user: User, otherUser: User): Promise<void> {
+    if (user.id == otherUser.id) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
     const userSide = await this.findUserRelation(user.id, otherUser.id);
     // 이미 userSide 관계가 존재한다면 status=block으로 변경
     if (userSide && userSide.status != UserRelationStatusEnum.BLOCKED) {
@@ -124,6 +142,9 @@ export class UserRelationService {
 
   // user와 otherUser가 친구가 됌
   async establishFriendship(userId: number, otherUserId: number): Promise<void> {
+    if (userId == otherUserId) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
     const userSide = await this.findUserRelation(userId, otherUserId);
     const theOtherSide = await this.findUserRelation(otherUserId, userId);
     if (
@@ -165,7 +186,21 @@ export class UserRelationService {
     return relations.map((relation) => relation.otherUser);
   }
 
+  async findAllFriendRequests(userId: number): Promise<User[]> {
+    const relations = await this.userRelationRepository.find({
+      where: {
+        user: { id: userId },
+        status: UserRelationStatusEnum.FRIEND_REQUEST,
+      },
+      relations: ['otherUser'],
+    });
+    return relations.map((relation) => relation.otherUser);
+  }
+
   async unblockUserRelation(userId: number, otherUserId: number): Promise<void> {
+    if (userId == otherUserId) {
+      throw new BadRequestException('잘못된 요청입니다.');
+    }
     const userSide = await this.findUserRelation(userId, otherUserId);
     if (userSide?.status === UserRelationStatusEnum.BLOCKED) {
       const theOtherSide = await this.findUserRelation(otherUserId, userId);

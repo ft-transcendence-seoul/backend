@@ -26,7 +26,10 @@ export class UserRelationController {
   }
 
   @Post('friends/:user_id/request')
-  async requestFriend(@GetUser() user: User, @Param('user_id', UserByIdPipe) otherUser: User): Promise<void> {
+  async requestFriend(
+    @GetUser() user: User,
+    @Param('user_id', UserByIdPipe) otherUser: User,
+  ): Promise<void> {
     await this.userRelationService.createFriendRequest(user, otherUser);
   }
 
@@ -46,7 +49,10 @@ export class UserRelationController {
   }
 
   @Post('block/:user_id')
-  async blockUser(@GetUser() user: User, @Param('user_id', UserByIdPipe) otherUser: User): Promise<void> {
+  async blockUser(
+    @GetUser() user: User,
+    @Param('user_id', UserByIdPipe) otherUser: User,
+  ): Promise<void> {
     await this.userRelationService.createBlockRelation(user, otherUser);
   }
 
