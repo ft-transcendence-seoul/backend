@@ -8,14 +8,16 @@ import {
   Body,
   Param,
   UnauthorizedException,
-  InternalServerErrorException,
   UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from 'src/users/dtos/create-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { AuthGuard } from './auth.guard';
+import { GetUser } from './user.decorator';
+import { User } from 'src/users/user.entity';
+import { TotpDto } from 'src/secure-shield/dtos/totp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -65,16 +67,26 @@ export class AuthController {
     const userEmail = await this.authService.getEmail(accessToken);
     const user = await this.usersService.findByEmail(userEmail);
     if (user) {
-      await this.authService.loginUser(req, user);
-      res.send({ redirect: 'home' });
+      if (user.is2fa) {
+        res.send({ redirect: '2FA' });
+      } else {
+        await this.authService.loginUser(req, user);
+        res.send({ redirect: 'home' });
+      }
     } else {
-      res.header('Set-Cookie', [`access_token=${accessToken}; SameSite=None; Secure; Max-Age=720000; HttpOnly=false`]);
+      res.header('Set-Cookie', [
+        `access_token=${accessToken}; SameSite=None; Secure; Max-Age=720000; HttpOnly=false`,
+      ]);
       res.send({ redirect: 'register' });
     }
   }
 
   @Post('register')
-  async userAdd(@Req() req: Request, @Res() res: Response, @Body() createUserDto: CreateUserDto): Promise<void> {
+  async userAdd(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<void> {
     const accessToken = req.cookies['access_token'];
     if (accessToken) {
       const userEmail = await this.authService.getEmail(accessToken);
@@ -82,9 +94,8 @@ export class AuthController {
       await this.authService.loginUser(req, newUser);
       res.send({ redirect: 'home' });
     } else {
-      throw new UnauthorizedException('42로그인이 필요합니다.');
+      throw new UnauthorizedException('로그인이 필요합니다.');
     }
-    res.send('가입 성공');
   }
 
   // session 저장, 토큰 반환 테스트를 위한 임시 핸들러
@@ -94,5 +105,46 @@ export class AuthController {
     console.log(`exist email: ${email}`);
     await this.authService.loginUser(req, user);
     res.send(`${email} 로그인 성공`);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('2fa/off')
+  async deactivate2fa(@Res() res: Response, @GetUser() user: User) {
+    await this.usersService.deactivate2fa(user);
+    res.send({ success: true });
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('2fa/setup')
+  async getOtpAuthUrl(@Res() res: Response, @GetUser() user: User): Promise<void> {
+    const otpAuthUrl = await this.authService.initialize2fa(user);
+    res.send({ otpauthurl: otpAuthUrl });
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('2fa/on')
+  async activate2fa(
+    @Res() res: Response,
+    @GetUser() user: User,
+    @Body() totpDto: TotpDto,
+  ): Promise<void> {
+    const result = await this.authService.verifyTotpAndEnable2fa(user, totpDto);
+    res.send({ success: result });
+  }
+
+  @Post('2fa/login')
+  async verifyTotpCode(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() totpDto: TotpDto,
+  ): Promise<void> {
+    const accessToken = req.cookies['access_token'];
+    if (accessToken) {
+      const userEmail = await this.authService.getEmail(accessToken);
+      const result = await this.authService.loginWithTotpValidation(req, userEmail, totpDto);
+      res.send({ success: result });
+    } else {
+      throw new UnauthorizedException('로그인이 필요합니다.');
+    }
   }
 }

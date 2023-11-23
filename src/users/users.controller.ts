@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { ShowUserOverviewDto } from './dto/show-user-overview.dto';
-import { ShowUserDetailsDto } from './dto/show-user-details.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { ShowUserOverviewDto } from './dtos/show-user-overview.dto';
+import { ShowUserDetailsDto } from './dtos/show-user-details.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { GetUser } from 'src/auth/user.decorator';
 import { User } from './user.entity';
 import { UserByIdPipe } from 'src/pipes/UserById.pipe';
-import { ShowUserInforamtionDto } from './dto/show-user-information';
+import { ShowUserInforamtionDto } from './dtos/show-user-information';
 
 @UseGuards(AuthGuard)
 @Controller('users')

@@ -27,8 +27,11 @@ export class User {
   @Column({ type: 'varchar', length: 256, nullable: true })
   bio: string;
 
-  @Column({ default: true })
+  @Column({ default: false })
   is2fa: boolean;
+
+  @Column({ nullable: true })
+  otpSecret: string;
 
   @OneToMany(() => ChannelRelation, (channelRelation) => channelRelation.user)
   channelRelations: ChannelRelation[];

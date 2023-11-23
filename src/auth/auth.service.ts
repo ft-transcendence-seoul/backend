@@ -5,13 +5,16 @@ import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import { User } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from 'src/users/dtos/create-user.dto';
+import { SecureShieldService } from 'src/secure-shield/secure-shield.service';
+import { TotpDto } from 'src/secure-shield/dtos/totp.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private configService: ConfigService,
     private usersService: UsersService,
+    private secureShieldService: SecureShieldService,
   ) {}
 
   private readonly AUTHORIZATION_URI = 'https://api.intra.42.fr/oauth/authorize';
@@ -77,5 +80,51 @@ export class AuthService {
       throw new BadRequestException('이미 가입된 유저입니다.');
     }
     return this.usersService.createUser(userEmail, createUserDto);
+  }
+
+  async initialize2fa(user: User) {
+    if (user.is2fa) {
+      throw new BadRequestException('2단계 인증이 이미 활성화 상태입니다.');
+    }
+    if (!user.otpSecret) {
+      await this.usersService.createSecretKey(user);
+    }
+    return this.secureShieldService.generateOtpAuthUrl(
+      user.email,
+      this.secureShieldService.decrypt(user.otpSecret),
+    );
+  }
+
+  async verifyTotpAndEnable2fa(user: User, totpDto: TotpDto): Promise<boolean> {
+    if (user.otpSecret) {
+      const otpSecret = this.secureShieldService.decrypt(user.otpSecret);
+      if (this.secureShieldService.isValidTotp(totpDto.token, otpSecret)) {
+        await this.usersService.activate2fa(user);
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      throw new NotFoundException('2단계 인증 정보가 존재하지 않습니다.');
+    }
+  }
+
+  async loginWithTotpValidation(req: Request, userEmail: string, totpDto: TotpDto) {
+    const user = await this.usersService.findByEmail(userEmail);
+    if (user) {
+      if (user.is2fa && user.otpSecret) {
+        const otpSecret = this.secureShieldService.decrypt(user.otpSecret);
+        if (this.secureShieldService.isValidTotp(totpDto.token, otpSecret)) {
+          await this.loginUser(req, user);
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        throw new BadRequestException('2단계 인증이 비활성화 상태입니다.');
+      }
+    } else {
+      throw new NotFoundException('존재하지 않는 유저입니다.');
+    }
   }
 }

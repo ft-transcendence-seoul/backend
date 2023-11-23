@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ChannelsModule } from './channels/channels.module';
 import { CommonsModule } from './commons/commons.module';
 import { DirectMessagesModule } from './direct-messages/direct-messages.module';
+import { SecureShieldModule } from './secure-shield/secure-shield.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { DirectMessagesModule } from './direct-messages/direct-messages.module';
     ChannelsModule,
     CommonsModule,
     DirectMessagesModule,
+    SecureShieldModule,
   ],
   providers: [TestService],
 })

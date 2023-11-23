@@ -4,5 +4,4 @@ export class UpdateUserDto {
   nickname: string;
   avatar: AvatarEnum;
   bio: string;
-  is2fa: boolean;
 }
