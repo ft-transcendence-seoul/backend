@@ -6,9 +6,10 @@ import { UserRelation } from './user-relation.entity';
 import { User } from 'src/users/user.entity';
 import { UsersModule } from 'src/users/users.module';
 import { UserRelationGateway } from './user-relation.gateway';
+import { CommonsModule } from 'src/commons/commons.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserRelation, User]), UsersModule],
+  imports: [TypeOrmModule.forFeature([UserRelation, User]), UsersModule, CommonsModule],
   controllers: [UserRelationController],
   providers: [UserRelationService, UserRelationGateway],
   exports: [TypeOrmModule, UserRelationService],
