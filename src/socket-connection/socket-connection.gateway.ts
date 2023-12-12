@@ -62,7 +62,7 @@ export class SocketConnectionGateway {
     );
     await this.redisService.hset(
       USER_ID_PREFIX + userId,
-      RedisField.USER_TO_SOCKER,
+      RedisField.USER_TO_SOCKET,
       clientSocketId,
     );
     await this.redisService.hset(USER_ID_PREFIX + userId, RedisField.USER_STATUS, 'online');
@@ -70,7 +70,7 @@ export class SocketConnectionGateway {
 
   private async removeClientRedis(clientSocketId: string, userId: string | number): Promise<void> {
     await this.redisService.hdel(SOCKET_ID_PREFIX + clientSocketId, RedisField.SOCKET_TO_USER);
-    await this.redisService.hdel(USER_ID_PREFIX + userId, RedisField.USER_TO_SOCKER);
+    await this.redisService.hdel(USER_ID_PREFIX + userId, RedisField.USER_TO_SOCKET);
     await this.redisService.hdel(USER_ID_PREFIX + userId, RedisField.USER_STATUS);
   }
 
@@ -84,7 +84,7 @@ export class SocketConnectionGateway {
   async userToSocket(userId: number): Promise<Socket | null> {
     const socketId = await this.redisService.hget(
       USER_ID_PREFIX + userId,
-      RedisField.USER_TO_SOCKER,
+      RedisField.USER_TO_SOCKET,
     );
     const socket = this.server.sockets.sockets.get(socketId);
     return socket;

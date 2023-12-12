@@ -9,6 +9,7 @@ import { ChannelInvitation } from './entities/channel-invitation.entity';
 import { ChannelGateway } from './channels.gateway';
 import { UserRelationModule } from 'src/user-relation/user-relation.module';
 import { SocketConnectionModule } from 'src/socket-connection/socket-connection.module';
+import { CommonsModule } from 'src/commons/commons.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SocketConnectionModule } from 'src/socket-connection/socket-connection.
     UsersModule,
     UserRelationModule,
     SocketConnectionModule,
+    CommonsModule,
   ],
   controllers: [ChannelsController],
   providers: [ChannelsService, ChannelGateway],

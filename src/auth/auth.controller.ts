@@ -26,27 +26,12 @@ export class AuthController {
     private usersService: UsersService,
   ) {}
 
-  // async logout(@Req() req: Request, @Res() res: Response, @GetUser() user: User): Promise<void> {
   @UseGuards(AuthGuard)
   @Post('logout')
   async logout(@Req() req: Request, @Res() res: Response): Promise<void> {
-    await new Promise((resolve, reject) => {
-      req.session.destroy((err) => {
-        if (err) {
-          reject(console.log(`LOGOUT ERR: ${err}`));
-        }
-        res.clearCookie('session-cookie');
-        res.send('로그아웃 성공');
-        resolve(undefined);
-      });
-    });
-    // const sessionKey = `user:${user.id}`;
-    // if (await redisClient.exists(sessionKey)) {
-    //   await redisClient.hdel(sessionKey, 'email');
-    //   res.send('로그아웃 성공');
-    // } else {
-    //   res.send('로그아웃 실패');
-    // }
+    this.authService.removeSession(req);
+    res.clearCookie('session-cookie');
+    res.send('로그아웃 성공');
   }
 
   @Get('sign-in')

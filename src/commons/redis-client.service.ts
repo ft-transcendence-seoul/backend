@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
-import { Socket } from 'socket.io';
-import { RedisField } from './enums/redis.enum';
 
 @Injectable()
 export class RedisService {
